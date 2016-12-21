@@ -98,6 +98,24 @@ RUN echo "Port 2122" >> /etc/ssh/sshd_config
 RUN service sshd start && $HADOOP_PREFIX/etc/hadoop/hadoop-env.sh && $HADOOP_PREFIX/sbin/start-dfs.sh && $HADOOP_PREFIX/bin/hdfs dfs -mkdir -p /user/root
 RUN service sshd start && $HADOOP_PREFIX/etc/hadoop/hadoop-env.sh && $HADOOP_PREFIX/sbin/start-dfs.sh && $HADOOP_PREFIX/bin/hdfs dfs -put $HADOOP_PREFIX/etc/hadoop/ input
 
+RUN yum install -y -q wget
+
+# Download Sqoop
+RUN curl -s http://www.apache.org/dist/sqoop/1.4.6/sqoop-1.4.6.bin__hadoop-2.0.4-alpha.tar.gz | tar -xz -C /opt
+RUN cd /opt && ln -s ./sqoop-1.4.6.bin__hadoop-2.0.4-alpha sqoop
+
+#Download the JDBC drivers for mysql
+RUN wget -P /tmp/ http://dev.mysql.com/get/Downloads/Connector-J/mysql-connector-java-5.1.37.tar.gz && \
+    tar -C /tmp/ -xzf /tmp/mysql-connector-java-5.1.37.tar.gz && \
+    cp /tmp/mysql-connector-java-5.1.37/mysql-connector-java-5.1.37-bin.jar /opt/sqoop/lib/
+
+#Download the kafka sqoop
+RUN wget -P /tmp/ http://central.maven.org/maven2/org/apache/sqoop/connector/sqoop-connector-kafka/1.99.6/sqoop-connector-kafka-1.99.6.jar && \
+    cp /tmp/sqoop-connector-kafka-1.99.6.jar /opt/sqoop/lib
+
+ENV SQOOP_HOME /opt/sqoop
+ENV PATH ${PATH}:${SQOOP_HOME}/bin:${HADOOP_HOME}/bin
+
 CMD ["/etc/bootstrap.sh", "-d"]
 
 # Hdfs ports
